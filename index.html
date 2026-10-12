@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap">
+<title>Pour Eden ♥</title>
+<style>
+:root{--bg:#08110a;--red:#5dff6e;--fg:#ffe94a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:var(--bg);overflow:hidden;font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;font-weight:700;text-transform:uppercase;touch-action:manipulation;user-select:none;-webkit-user-select:none;color:var(--fg)}
+body:before{content:"";position:fixed;inset:0;background:repeating-linear-gradient(135deg,transparent 0 22px,#ffffff06 22px 24px);pointer-events:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.lbl{position:fixed;top:calc(18% + env(safe-area-inset-top,0px));width:100%;text-align:center;font-size:clamp(22px,7vw,34px);letter-spacing:.06em;transition:opacity .5s}
+.lbl b{color:var(--red)}
+.orb{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);width:clamp(160px,50vw,220px);aspect-ratio:1;padding:0;border:0;background:none;color:var(--fg);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .5s,scale .5s}
+.orb svg{width:100%;height:100%;display:block}
+.orb .bg{fill:#5dff6e12;stroke:#5dff6e40;stroke-width:3}
+.orb .pg{fill:none;stroke:var(--red);stroke-width:5;stroke-linecap:round;stroke-dasharray:289;stroke-dashoffset:289;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .25s}
+.orb .ch{stroke:var(--fg);stroke-width:2;opacity:.85}
+.orb span{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(26px,8vw,38px);letter-spacing:.02em;text-shadow:2px 2px 0 var(--red)}
+.orb.gone{opacity:0;scale:1.7;pointer-events:none}
+.hint{position:fixed;bottom:calc(14% + env(safe-area-inset-bottom,0px));width:100%;text-align:center;font:700 12px 'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:.3em;color:var(--red);animation:b 1.4s steps(2) infinite;transition:opacity .5s}
+@keyframes b{50%{opacity:.35}}
+.gone-all{opacity:0!important}
+.msg{position:fixed;left:50%;bottom:calc(7% + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:clamp(240px,86vw,420px);text-align:center;font:600 clamp(13px,3.7vw,16px)/1.45 'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;text-transform:none;letter-spacing:.02em;text-shadow:0 0 10px #08110a,0 0 4px #08110a;opacity:0;transition:opacity 1.5s 1.8s;pointer-events:none}
+.msg em{display:block;margin-top:6px;font-style:normal;color:var(--red)}
+body.done .msg{opacity:1}
+.feed{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:10px;display:flex;flex-direction:column;align-items:flex-end;gap:4px;pointer-events:none}
+.feed div{background:#08110add;border:1px solid var(--red);padding:4px 10px;font:700 12px 'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:.08em;animation:o 2.2s forwards}
+.feed b{color:var(--red)}
+@keyframes o{0%{transform:translateX(30px);opacity:0}10%{transform:none;opacity:1}85%{opacity:1}100%{opacity:0}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="feed" id="f"></div>
+<div class="lbl" id="l">POUR <b id="nm"></b></div>
+<button class="orb" id="btn" aria-label="Appuie">
+  <svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="46"/><circle class="pg" id="pg" cx="50" cy="50" r="46"/>
+  <path class="ch" d="M50 22v14M50 64v14M22 50h14M64 50h14"/></svg>
+  <span id="k">0/10</span>
+</button>
+<div class="hint" id="h">TAPE 10 FOIS SUR LE ROND</div>
+<div class="msg" id="m"></div>
+<script>
+const q=new URLSearchParams(location.search),NOM=(q.get('nom')||'Eden').toUpperCase(),MAX=10;
+document.getElementById('nm').textContent=NOM;
+const msg=q.get('msg')||"Coucou, je voulais te dire full love sur toi et merci de me booster, même si normalement c'est moi 😄";
+document.getElementById('m').innerHTML=msg.replace(/</g,'&lt;')+'<em>Plein de bisous mon Tesoro d\'amour ♥</em>';
+document.title='Pour '+NOM+' ♥';
+const c=document.getElementById('c'),x=c.getContext('2d'),D=Math.min(devicePixelRatio||1,2);
+let W,H,n=0,ult=0,t0=0;
+function rs(){W=innerWidth;H=innerHeight;c.width=W*D;c.height=H*D;x.setTransform(D,0,0,D,0,0)}
+addEventListener('resize',rs);rs();
+const P=[];
+for(let i=0;i<1000;i++){
+  const a=Math.random()*Math.PI*2,k=Math.pow(Math.random(),.3);
+  P.push({x:innerWidth/2,y:innerHeight*.44,
+    tx:16*Math.pow(Math.sin(a),3)*k,ty:-(13*Math.cos(a)-5*Math.cos(2*a)-2*Math.cos(3*a)-Math.cos(4*a))*k,
+    s:Math.random()*2+1,d:.025+Math.random()*.05,w:Math.random()<.12,
+    vx:(Math.random()-.5)*26,vy:(Math.random()-.5)*26});
+}
+const F=[],btn=document.getElementById('btn'),feed=document.getElementById('f');
+btn.addEventListener('pointerdown',e=>{
+  if(ult)return;
+  n++;
+  F.push({x:e.clientX,y:e.clientY,v:1.4,a:1,z:26+Math.random()*16,r:(Math.random()-.5)*.5});
+  document.getElementById('pg').style.strokeDashoffset=289*(1-n/MAX);
+  document.getElementById('k').textContent=n+'/'+MAX;
+  btn.animate([{transform:'translate(-50%,-50%) scale(.9)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:160});
+  const d=document.createElement('div');
+  d.innerHTML='<b>+1 BOOST</b> · '+NOM+' ✔ ×'+n;
+  feed.appendChild(d);setTimeout(()=>d.remove(),2200);
+  if(feed.children.length>4)feed.firstChild.remove();
+  if(n>=MAX){
+    ult=1;
+    setTimeout(()=>{btn.classList.add('gone');document.getElementById('l').classList.add('gone-all');document.getElementById('h').classList.add('gone-all');t0=performance.now();document.body.classList.add('done')},350);
+  }
+});
+function draw(ms){
+  x.globalCompositeOperation='source-over';
+  x.fillStyle='rgba(8,17,10,.3)';x.fillRect(0,0,W,H);
+  if(t0){
+    const b=Math.pow(Math.max(0,Math.sin(ms/330)),6)*.07,S=Math.min(W,H)/40*(1+b),cx=W/2,cy=H*.44;
+    const burst=ms-t0<350;
+    for(const p of P){
+      if(burst){p.x+=p.vx;p.y+=p.vy}
+      else{p.x+=(cx+p.tx*S-p.x)*p.d+(Math.random()-.5)*.5;p.y+=(cy+p.ty*S-p.y)*p.d+(Math.random()-.5)*.5}
+      x.fillStyle=p.w?'#ffe94a':'#5dff6e';x.fillRect(p.x,p.y,p.s,p.s);
+    }
+  }
+  for(let i=F.length-1;i>=0;i--){
+    const f=F[i];f.y-=f.v;f.a-=.012;
+    if(f.a<=0){F.splice(i,1);continue}
+    x.save();x.translate(f.x,f.y);x.rotate(f.r);x.globalAlpha=f.a;
+    x.font='700 '+f.z+"px 'Space Grotesk',system-ui,sans-serif";x.textAlign='center';
+    x.fillStyle='#5dff6e';x.fillText(NOM,2,2);x.fillStyle='#ffe94a';x.fillText(NOM,0,0);
+    x.restore();
+  }
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
